@@ -1,339 +1,150 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>终端模拟器</title>
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-        body {
-            background-color: #000;
-            color: #0f0;
-            font-family: 'Courier New', monospace;
-            text-align: center;
-            padding: 20px;
-        }
-        #terminal {
-            border: 2px solid #0f0;
-            padding: 20px;
-            margin: 50px auto;
-            max-width: 450px;
-            background: #050505;
-            border-radius: 8px;
-        }
-        #status {
-            font-size: 18px;
-            margin-bottom: 20px;
-        }
-        #code-input {
-            background: #000;
-            color: #0f0;
-            border: 1px solid #0f0;
-            padding: 12px;
-            width: 100%;
-            font-size: 16px;
-            outline: none;
-            border-radius: 4px;
-        }
-        .key-btn {
-            display: block;
-            margin: 15px auto;
-            color: #00ffff;
-            text-decoration: underline;
-            cursor: pointer;
-            background: transparent;
-            border: none;
-            font-size: 16px;
-        }
-        #run-btn {
-            background: #0f0;
-            color: #000;
-            border: none;
-            padding: 12px;
-            font-weight: bold;
-            margin-top: 15px;
-            width: 100%;
-            cursor: pointer;
-            font-size: 18px;
-            border-radius: 4px;
-            transition: background 0.2s;
-        }
-        #run-btn:hover {
-            background: #0c0;
-        }
-        #log-output {
-            margin-top: 20px;
-            background: #0a0a0a;
-            padding: 15px;
-            min-height: 250px;
-            border: 1px solid #0f0;
-            border-radius: 4px;
-            text-align: left;
-            overflow-y: auto;
-            max-height: 300px;
-        }
-        .log-line {
-            color: #0f0;
-            line-height: 1.6;
-            font-size: 14px;
-            opacity: 0;
-            animation: fadeIn 0.15s forwards;
-        }
-        @keyframes fadeIn {
-            to { opacity: 1; }
-        }
-        .success {
-            color: #0f0;
-            font-size: 22px;
-            font-weight: bold;
-            animation: blink 0.5s infinite;
-        }
-        .error {
-            color: #ff0000;
-            font-size: 22px;
-            font-weight: bold;
-            animation: blink 0.5s infinite;
-        }
-        @keyframes blink {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.3; }
-        }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ninja Executor - 密钥 & 执行器</title>
+<style>
+* {margin:0;padding:0;box-sizing:border-box;font-family:sans-serif;}
+body{background:#111;color:#fff;padding:20px;}
+.container{max-width:800px;margin:0 auto;}
+h1{color:#9d4edd;margin-bottom:20px;}
+.box{background:#222;padding:15px;border-radius:8px;margin:10px 0;}
+input,textarea{width:100%;padding:10px;background:#333;border:none;color:#fff;border-radius:4px;margin:8px 0;}
+button{padding:10px 20px;background:#9d4edd;border:none;color:#fff;border-radius:4px;cursor:pointer;margin:5px;}
+button:disabled{background:#555;cursor:not-allowed;}
+.log{background:#000;padding:10px;height:150px;overflow:auto;color:#0f0;}
+</style>
 </head>
 <body>
-    <div id="terminal">
-        <p id="status">请输入随机黑客代码:</p>
-        <input type="text" id="code-input" placeholder="等待注入代码...">
-        <button class="key-btn" onclick="generateRandomKey()">🔗 [点击此处获取并复制当前随机密钥]</button>
-        <button id="run-btn" onclick="startHack()">⚡ 运行 RUN</button>
-        <div id="log-output"></div>
+<div class="container">
+    <h1>NINJA EXECUTOR 🔐</h1>
 
-        <!-- 新增：Roblox脚本输入框和执行按钮 -->
-        <div style="margin-top:20px; border-top:1px solid #0f0; padding-top:20px;">
-            <p style="color:#aaa; font-size:14px; margin-bottom:10px;">📜 粘贴Roblox脚本：</p>
-            <textarea id="script-input" placeholder="把别人的脚本粘贴在这里..." style="width:100%; height:150px; background:#000; border:1px solid #0f0; color:#0f0; padding:10px; border-radius:4px; font-family:monospace; font-size:14px; outline:none;"></textarea>
-            <button onclick="executeScript()" style="background:#00aa00; color:#000; border:none; padding:10px; width:100%; margin-top:10px; border-radius:4px; font-weight:bold; cursor:pointer;">▶️ 执行脚本</button>
-        </div>
+    <!-- 1. 获取密钥区域 -->
+    <div class="box">
+        <h3>🔑 在线获取密钥</h3>
+        <div id="timeText"></div>
+        <input id="keyShow" readonly placeholder="密钥会显示在这里">
+        <button id="getBtn" onclick="makeKey()">生成密钥</button>
+        <button id="copyBtn" onclick="copyKey()" disabled>复制密钥</button>
     </div>
 
-    <script>
-        // 存储当前生成的正确密钥
-        let currentCorrectKey = "";
-        // 预定义的"黑客日志"随机片段
-        const fakeLogs = [
-            "Initializing network scan...",
-            "Scanning port 21... open",
-            "Scanning port 22... open",
-            "Scanning port 80... open",
-            "Scanning port 443... open",
-            "Bypassing firewall rules... success",
-            "Decrypting AES-256 payload...",
-            "Injecting SQL injection payload...",
-            "Brute-forcing admin credentials...",
-            "Establishing backdoor connection...",
-            "Accessing target system...",
-            "Downloading sensitive data...",
-            "Encrypting exfiltrated files...",
-            "Covering tracks, erasing logs...",
-            "Disabling system alerts...",
-            "Elevating privileges to root...",
-            "Uploading rootkit module...",
-            "Spawning interactive shell...",
-            "Enumerating user permissions...",
-            "Exploiting CVE-2024-21234..."
-        ];
+    <!-- 2. 密钥验证 + 执行器 -->
+    <div class="box">
+        <h3>✅ 密钥验证 & 脚本执行</h3>
+        <input id="userKey" placeholder="粘贴你获取到的密钥...">
+        <textarea id="scriptInput" placeholder="只能粘贴真实Roblox脚本：loadstring / getgenv 这类才允许执行"></textarea>
+        <button onclick="runInject()">开始执行</button>
+        <button onclick="clearLog()">清空日志</button>
+    </div>
 
-        // 1. 生成随机密钥并复制
-        function generateRandomKey() {
-            const chars = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*';
-            let part1 = '', part2 = '', part3 = '';
-            // 生成 4 + 5 + 4 位的密钥，带空格分隔
-            for (let i = 0; i < 4; i++) part1 += chars[Math.floor(Math.random() * chars.length)];
-            for (let i = 0; i < 5; i++) part2 += chars[Math.floor(Math.random() * chars.length)];
-            for (let i = 0; i < 4; i++) part3 += chars[Math.floor(Math.random() * chars.length)];
-            currentCorrectKey = `${part1} ${part2} ${part3}`;
-            // 自动复制到剪贴板
-            navigator.clipboard.writeText(currentCorrectKey).then(() => {
-                alert(`【密钥生成成功】\n当前随机代码为: ${currentCorrectKey}\n已自动复制！直接粘贴到输入框即可`);
-                document.getElementById('status').innerText = "密钥已复制，请输入系统...";
-            }).catch(() => {
-                // 复制失败时手动提示
-                alert(`当前随机代码为: ${currentCorrectKey}\n请记住并手动输入！`);
-            });
-        }
+    <!-- 3. 运行日志 -->
+    <div class="box">
+        <div class="log" id="log"></div>
+    </div>
+</div>
 
-        // 2. 点击运行后，先播放随机代码滚动效果，再验证密钥
-        function startHack() {
-            const input = document.getElementById('code-input').value.trim().toLowerCase();
-            const logOutput = document.getElementById('log-output');
-            const status = document.getElementById('status');
-            logOutput.innerHTML = ''; // 清空之前的日志
-            // 检查是否生成过密钥
-            if (currentCorrectKey === "") {
-                alert('【错误】请先点击上方按钮生成随机密钥！');
-                return;
-            }
-            // 禁用按钮防止重复点击
-            document.getElementById('run-btn').disabled = true;
-            document.getElementById('run-btn').innerText = "正在入侵...";
-            // 生成随机日志的动画
-            let logCount = 0;
-            const maxLogs = 25; // 日志总行数
-            const interval = setInterval(() => {
-                if (logCount >= maxLogs) {
-                    clearInterval(interval);
-                    // 日志播放完，验证密钥
-                    verifyCode(input, logOutput, status);
-                    document.getElementById('run-btn').disabled = false;
-                    document.getElementById('run-btn').innerText = "⚡ 运行 RUN";
-                    return;
-                }
-                // 随机添加日志行
-                const randomLog = fakeLogs[Math.floor(Math.random() * fakeLogs.length)];
-                const logLine = document.createElement('div');
-                logLine.className = 'log-line';
-                logLine.textContent = `[${new Date().toLocaleTimeString()}] ${randomLog}`;
-                logOutput.appendChild(logLine);
-                logOutput.scrollTop = logOutput.scrollHeight; // 自动滚动到底部
-                logCount++;
-            }, 120); // 每120ms生成一行日志，营造疯狂滚动效果
-        }
+<script>
+let nowKey = "";
+const wordLib = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
 
-        // 3. 验证输入的密钥是否正确
-        function verifyCode(input, logOutput, status) {
-            function verifyCode(input, logOutput, status) {
-    // ...（你的验证代码）
+// 随机密钥
+function randStr(n){
+    let s = "";
+    for(let i=0;i<n;i++) s += wordLib[Math.floor(Math.random()*wordLib.length)];
+    return s;
 }
 
-// ↓↓↓ 在这里粘贴executeScript函数 ↓↓↓
-function executeScript() {
-    const scriptInput = document.getElementById('script-input').value.trim();
-    if (!scriptInput) {
-        alert('⚠️ 请先粘贴Roblox脚本！');
+// 生成密钥倒计时
+function makeKey(){
+    let btn = document.getElementById("getBtn");
+    let copyBtn = document.getElementById("copyBtn");
+    let show = document.getElementById("keyShow");
+    let tTxt = document.getElementById("timeText");
+
+    btn.disabled = true;
+    let t = 6;
+    tTxt.innerText = "等待："+t+"秒";
+    let timer = setInterval(()=>{
+        t--;
+        tTxt.innerText = "等待："+t+"秒";
+        if(t<=0){
+            clearInterval(timer);
+            nowKey = randStr(4)+"-"+randStr(4)+"-"+randStr(4);
+            show.value = nowKey;
+            copyBtn.disabled = false;
+            tTxt.innerText = "密钥生成成功！";
+            localStorage.setItem("saveKey",nowKey);
+        }
+    },1000);
+}
+
+// 复制密钥
+function copyKey(){
+    navigator.clipboard.writeText(nowKey);
+    alert("✅ 密钥已复制！去下面粘贴验证");
+}
+
+// 页面自动回填上次密钥
+window.onload = function(){
+    let old = localStorage.getItem("saveKey");
+    if(old) document.getElementById("userKey").value = old;
+}
+
+// 日志
+function addLog(text){
+    let log = document.getElementById("log");
+    log.innerHTML += text+"<br>";
+    log.scrollTop = log.scrollHeight;
+}
+function clearLog(){
+    document.getElementById("log").innerHTML = "日志已清空...";
+}
+
+// 密钥格式判断
+function checkKey(k){
+    let reg = /^[A-Z0-9]{4}-[A-Z0-9]{4}-[A-Z0-9]{4}$/;
+    return reg.test(k);
+}
+
+// 判断是不是真Roblox脚本
+function checkScript(s){
+    let ok = [/loadstring/i,/getgenv/i,/game:GetService/i,/_G\./i];
+    for(let x of ok) if(x.test(s)) return true;
+    return false;
+}
+
+// 主运行
+function runInject(){
+    let k = document.getElementById("userKey").value.trim();
+    let s = document.getElementById("scriptInput").value.trim();
+
+    if(!k){
+        alert("请先获取并填写密钥！");
+        addLog("[错误] 未填写密钥");
+        return;
+    }
+    if(!checkKey(k)){
+        alert("密钥错误！重新生成");
+        addLog("[错误] 密钥无效");
+        return;
+    }
+    if(!s){
+        alert("请粘贴Roblox脚本！");
+        return;
+    }
+    if(!checkScript(s)){
+        alert("不是真实Roblox脚本，禁止运行！");
+        addLog("[错误] 非法脚本拦截");
         return;
     }
 
-    // 校验是否符合Roblox脚本常见格式
-    const robloxPatterns = [
-        /loadstring\(.+\)/i,
-        /getgenv\(\)/i,
-        /getfenv\(\)/i,
-        /getrenv\(\)/i,
-        /setreadonly\(/i,
-        /\_G\./,
-        /game:GetService\(/i
-    ];
-
-    let isRealScript = false;
-    for (const pattern of robloxPatterns) {
-        if (pattern.test(scriptInput)) {
-            isRealScript = true;
-            break;
-        }
-    }
-
-    if (!isRealScript) {
-        alert('❌ 请粘贴有效的Roblox脚本！\n（需要包含loadstring/getgenv等关键词）');
-        return;
-    }
-
-    // 校验通过，播放执行动画
-    document.getElementById('log-output').innerHTML = '';
-    let logCount = 0;
-    const maxLogs = 12;
-    const scriptLogs = [
-        "[INFO] 正在解析Roblox Lua脚本...",
-        "[INFO] 验证脚本签名与格式...",
-        "[INFO] 注入游戏内存空间...",
-        "[INFO] 绕过Roblox反注入保护...",
-        "[INFO] 加载脚本依赖模块...",
-        "[INFO] 执行脚本主函数...",
-        "[INFO] 初始化游戏功能模块...",
-        "[INFO] 注入完成，脚本运行中...",
-    ];
-
-    const interval = setInterval(() => {
-        if (logCount >= maxLogs) {
-            clearInterval(interval);
-            const successMsg = document.createElement('div');
-            successMsg.className = 'log-line success';
-            successMsg.textContent = "[+] 脚本执行成功！功能已在游戏中激活";
-            document.getElementById('log-output').appendChild(successMsg);
-            return;
-        }
-        const randomLog = scriptLogs[Math.floor(Math.random() * scriptLogs.length)];
-        const logLine = document.createElement('div');
-        logLine.className = 'log-line';
-        logLine.textContent = `[${new Date().toLocaleTimeString()}] ${randomLog}`;
-        document.getElementById('log-output').appendChild(logLine);
-        document.getElementById('log-output').scrollTop = document.getElementById('log-output').scrollHeight;
-        logCount++;
-    }, 180);
+    addLog("[成功] 密钥验证通过");
+    setTimeout(()=>addLog("[系统] 正在检测Roblox进程..."),500);
+    setTimeout(()=>addLog("[系统] 绕过反注入保护..."),1000);
+    setTimeout(()=>addLog("[系统] 脚本注入中..."),1500);
+    setTimeout(()=>addLog("[成功] 脚本执行完成！"),2200);
 }
-// ↑↑↑ 粘贴结束 ↑↑↑
-
 </script>
-
-            // 去掉空格后对比（不区分大小写）
-            const inputClean = input.replace(/\s+/g, '').toLowerCase();
-            const keyClean = currentCorrectKey.replace(/\s+/g, '').toLowerCase();
-            if (inputClean === keyClean) {
-                // 验证成功
-                const successMsg = document.createElement('div');
-                successMsg.className = 'log-line success';
-                successMsg.textContent = "[+] 系统入侵完成！所有权限已获取，数据已成功下载。";
-                logOutput.appendChild(successMsg);
-                status.innerHTML = '<span class="success">✅ 入侵成功！系统已被控制</span>';
-            } else {
-                // 验证失败
-                const errorMsg = document.createElement('div');
-                errorMsg.className = 'log-line error';
-                errorMsg.textContent = "[-] 密钥验证失败！系统防御已激活，连接已被断开。";
-                logOutput.appendChild(errorMsg);
-                status.innerHTML = '<span class="error">❌ 入侵失败！系统已锁定</span>';
-            }
-        }
-
-        // 新增：模拟执行Roblox脚本的函数
-        function executeScript() {
-            const scriptInput = document.getElementById('script-input').value.trim();
-            if (!scriptInput) {
-                alert('⚠️ 请先粘贴脚本！');
-                return;
-            }
-            document.getElementById('log-output').innerHTML = '';
-            let logCount = 0;
-            const maxLogs = 10;
-            const scriptLogs = [
-                "[INFO] 解析Roblox脚本...",
-                "[INFO] 验证脚本格式...",
-                "[INFO] 注入游戏内存...",
-                "[INFO] 执行脚本函数...",
-                "[INFO] 加载模块中...",
-                "[INFO] 脚本运行中...",
-            ];
-            const interval = setInterval(() => {
-                if (logCount >= maxLogs) {
-                    clearInterval(interval);
-                    const successMsg = document.createElement('div');
-                    successMsg.className = 'log-line success';
-                    successMsg.textContent = "[+] 脚本执行完成！功能已生效";
-                    document.getElementById('log-output').appendChild(successMsg);
-                    return;
-                }
-                const randomLog = scriptLogs[Math.floor(Math.random() * scriptLogs.length)];
-                const logLine = document.createElement('div');
-                logLine.className = 'log-line';
-                logLine.textContent = `[${new Date().toLocaleTimeString()}] ${randomLog}`;
-                document.getElementById('log-output').appendChild(logLine);
-                document.getElementById('log-output').scrollTop = document.getElementById('log-output').scrollHeight;
-                logCount++;
-            }, 150);
-        }
-    </script>
 </body>
 </html>
