@@ -1,0 +1,7 @@
+local Player = game.Players.LocalPlayer
+local Mouse = Player:GetMouse()
+Mouse.KeyDown:connect(function(Key)
+    if Key == " " then
+        Player.Character.Humanoid.Jump = true
+    end
+end)
