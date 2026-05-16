@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>终端</title>
+    <style>
+        body { background-color: #000; color: #0f0; font-family: monospace; text-align: center; padding-top: 50px; }
+        #terminal { border: 2px solid #0f0; padding: 20px; margin: 0 auto; max-width: 350px; background: #050505; }
+        input { background: #000; color: #0f0; border: 1px solid #0f0; padding: 10px; width: 85%; font-size: 16px; outline: none; text-align: center; }
+        button { background: #0f0; color: #000; border: none; padding: 10px; font-weight: bold; margin-top: 15px; width: 92%; font-size: 16px; cursor: pointer; }
+        .key-link { display: block; margin: 15px 0; color: #00ffff; text-decoration: underline; font-size: 14px; cursor: pointer; }
+        .success { color: #ff0055; font-size: 30px; font-weight: bold; animation: blink 0.5s infinite; }
+        @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }
+    </style>
+</head>
+<body>
+
+    <div id="terminal">
+        <p id="status">> 请输入黑客代码:</p>
+        <input type="text" id="code-input" placeholder="输入代码...">
+        <a class="key-link" href="https://netcut.cn" target="_blank">🔗 点击这里获取免费密钥 (Key)</a>
+        <button onclick="checkCode()">⚡ 运行 RUN</button>
+    </div>
+
+    <script>
+        function checkCode() {
+            let input = document.getElementById('code-input').value.trim().toLowerCase();
+            let box = document.getElementById('terminal');
+
+            if (input === '3k72 p8l05 6f49' || input === '3k72p8l056f49') { 
+                box.innerHTML = "<p class='success'>HACK SUCCESS<br>ACCESS GRANTED</p>";
+                document.body.style.backgroundColor = '#100';
+            } else {
+                alert('ACCESS DENIED');
+                document.getElementById('code-input').value = '';
+            }
+        }
+    </script>
+</body>
+</html>
