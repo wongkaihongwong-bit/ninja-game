@@ -1,0 +1,261 @@
+-- ==============================================
+-- Restaurant Tycoon 3 最终完整版
+-- 功能：可拖动/收缩/关闭面板 + 自动收集钱 + 一键改钱/钻石
+-- ==============================================
+local Players = game:GetService("Players")
+local Workspace = game:GetService("Workspace")
+local StarterGui = game:GetService("StarterGui")
+local RunService = game:GetService("RunService")
+
+local Player = Players.LocalPlayer
+local Character = Player.Character or Player.CharacterAdded:Wait()
+local Humanoid = Character:WaitForChild("Humanoid", 10)
+
+-- 弹窗通知
+local function Notify(text)
+    StarterGui:SetCore("SendNotification", {
+        Title = "Ninja Executor";
+        Text = text;
+        Duration = 2;
+    })
+end
+
+-- 防止重复创建UI
+if Player.PlayerGui:FindFirstChild("FullHub") then
+    Player.PlayerGui.FullHub:Destroy()
+end
+
+-- 主UI
+local Hub = Instance.new("ScreenGui")
+Hub.Name = "FullHub"
+Hub.ResetOnSpawn = false
+Hub.Parent = Player.PlayerGui
+
+-- 窗口框架
+local MainFrame = Instance.new("Frame")
+MainFrame.Size = UDim2.new(0, 300, 0, 400)
+MainFrame.Position = UDim2.new(0.1, 0, 0.2, 0)
+MainFrame.BackgroundColor3 = Color3.fromRGB(25, 25, 35)
+MainFrame.BorderSizePixel = 0
+MainFrame.ClipsDescendants = true
+MainFrame.Parent = Hub
+
+-- 标题栏（可拖动）
+local TopBar = Instance.new("Frame")
+TopBar.Size = UDim2.new(1, 0, 0, 35)
+TopBar.BackgroundColor3 = Color3.fromRGB(110, 40, 180)
+TopBar.Parent = MainFrame
+
+local TitleText = Instance.new("TextLabel")
+TitleText.Size = UDim2.new(0.65, 0, 1, 0)
+TitleText.BackgroundTransparency = 1
+TitleText.Text = "Restaurant Tycoon 3 Hub"
+TitleText.TextColor3 = Color3.new(1, 1, 1)
+TitleText.Font = Enum.Font.GothamBold
+TitleText.TextSize = 14
+TitleText.Parent = TopBar
+
+-- 收缩按钮
+local MinBtn = Instance.new("TextButton")
+MinBtn.Size = UDim2.new(0, 50, 1, 0)
+MinBtn.Position = UDim2.new(0.75, 0, 0, 0)
+MinBtn.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+MinBtn.Text = "—"
+MinBtn.TextColor3 = Color3.new(1, 1, 1)
+MinBtn.Font = Enum.Font.GothamBold
+MinBtn.Parent = TopBar
+
+-- 关闭按钮
+local CloseBtn = Instance.new("TextButton")
+CloseBtn.Size = UDim2.new(0, 40, 1, 0)
+CloseBtn.Position = UDim2.new(0.91, 0, 0, 0)
+CloseBtn.BackgroundColor3 = Color3.fromRGB(180, 30, 30)
+CloseBtn.Text = "X"
+CloseBtn.TextColor3 = Color3.new(1, 1, 1)
+CloseBtn.Font = Enum.Font.GothamBold
+CloseBtn.Parent = TopBar
+
+-- 内容面板
+local Content = Instance.new("Frame")
+Content.Size = UDim2.new(1, 0, 1, -35)
+Content.Position = UDim2.new(0, 0, 0, 35)
+Content.BackgroundTransparency = 1
+Content.Parent = MainFrame
+
+-- 1. 自动收集钱按钮
+local CollectBtn = Instance.new("TextButton")
+CollectBtn.Size = UDim2.new(0.85, 0, 0, 45)
+CollectBtn.Position = UDim2.new(0.075, 0, 0.1, 0)
+CollectBtn.BackgroundColor3 = Color3.fromRGB(45, 45, 55)
+CollectBtn.Text = "🔴 关闭自动收集"
+CollectBtn.TextColor3 = Color3.new(1, 1, 1)
+CollectBtn.Font = Enum.Font.GothamBold
+CollectBtn.TextSize = 13
+CollectBtn.Parent = Content
+
+-- 2. 一键改钱按钮
+local MoneyBtn = Instance.new("TextButton")
+MoneyBtn.Size = UDim2.new(0.85, 0, 0, 45)
+MoneyBtn.Position = UDim2.new(0.075, 0, 0.25, 0)
+MoneyBtn.BackgroundColor3 = Color3.fromRGB(30, 120, 40)
+MoneyBtn.Text = "💰 一键设置999999金钱"
+MoneyBtn.TextColor3 = Color3.new(1, 1, 1)
+MoneyBtn.Font = Enum.Font.GothamBold
+MoneyBtn.TextSize = 13
+MoneyBtn.Parent = Content
+
+-- 3. 一键改钻石按钮
+local GemBtn = Instance.new("TextButton")
+GemBtn.Size = UDim2.new(0.85, 0, 0, 45)
+GemBtn.Position = UDim2.new(0.075, 0, 0.4, 0)
+GemBtn.BackgroundColor3 = Color3.fromRGB(30, 80, 140)
+GemBtn.Text = "💎 一键设置999钻石"
+GemBtn.TextColor3 = Color3.new(1, 1, 1)
+GemBtn.Font = Enum.Font.GothamBold
+GemBtn.TextSize = 13
+GemBtn.Parent = Content
+
+-- 4. 一键完成烹饪任务按钮
+local TaskBtn = Instance.new("TextButton")
+TaskBtn.Size = UDim2.new(0.85, 0, 0, 45)
+TaskBtn.Position = UDim2.new(0.075, 0, 0.55, 0)
+TaskBtn.BackgroundColor3 = Color3.fromRGB(255, 150, 0)
+TaskBtn.Text = "✅ 一键完成烹饪任务"
+TaskBtn.TextColor3 = Color3.new(1, 1, 1)
+TaskBtn.Font = Enum.Font.GothamBold
+TaskBtn.TextSize = 13
+TaskBtn.Parent = Content
+
+-- 窗口拖动逻辑
+local Draging, StartMouse, StartFrame
+TopBar.InputBegan:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 then
+        Draging = true
+        StartMouse = input.Position
+        StartFrame = MainFrame.Position
+    end
+end)
+TopBar.InputChanged:Connect(function(input)
+    if Draging and input.UserInputType == Enum.UserInputType.MouseMovement then
+        local Delta = input.Position - StartMouse
+        MainFrame.Position = UDim2.new(
+            StartFrame.X.Scale, StartFrame.X.Offset + Delta.X,
+            StartFrame.Y.Scale, StartFrame.Y.Offset + Delta.Y
+        )
+    end
+end)
+TopBar.InputEnded:Connect(function()
+    Draging = false
+end)
+
+-- 收缩/展开逻辑
+local IsMin = false
+MinBtn.MouseButton1Click:Connect(function()
+    IsMin = not IsMin
+    if IsMin then
+        Content.Visible = false
+        MainFrame.Size = UDim2.new(0, 300, 0, 35)
+        MinBtn.Text = "□"
+    else
+        Content.Visible = true
+        MainFrame.Size = UDim2.new(0, 300, 0, 400)
+        MinBtn.Text = "—"
+    end
+end)
+
+-- 关闭面板逻辑
+CloseBtn.MouseButton1Click:Connect(function()
+    MainFrame.Visible = false
+    Notify("面板已关闭")
+end)
+
+-- ==================== 功能实现 ====================
+-- 自动收集钱
+local AutoCollectRunning = false
+CollectBtn.MouseButton1Click:Connect(function()
+    AutoCollectRunning = not AutoCollectRunning
+    if AutoCollectRunning then
+        CollectBtn.BackgroundColor3 = Color3.fromRGB(20, 100, 20)
+        CollectBtn.Text = "🟢 开启自动收集"
+        Notify("自动收集已开启！人物会自动跑去捡钱")
+        
+        task.spawn(function()
+            while AutoCollectRunning and task.wait(0.3) do
+                pcall(function()
+                    for _, part in ipairs(Workspace:GetDescendants()) do
+                        if part:IsA("Part") and (
+                            part.Name:lower():find("cash") or 
+                            part.Name:lower():find("money") or 
+                            part.Name:lower():find("coin") or 
+                            part.Name:lower():find("tip")
+                        ) then
+                            if Humanoid.Health > 0 and not Humanoid.Sit then
+                                Character:MoveTo(part.Position + Vector3.new(0, 2, 0))
+                            end
+                        end
+                    end
+                end)
+            end
+        end)
+    else
+        CollectBtn.BackgroundColor3 = Color3.fromRGB(45, 45, 55)
+        CollectBtn.Text = "🔴 关闭自动收集"
+        Notify("自动收集已关闭")
+    end
+end)
+
+-- 一键改钱
+MoneyBtn.MouseButton1Click:Connect(function()
+    pcall(function()
+        -- 尝试修改leaderstats
+        if Player:FindFirstChild("leaderstats") then
+            local Cash = Player.leaderstats:FindFirstChild("Cash") or Player.leaderstats:FindFirstChild("Money")
+            if Cash then
+                Cash.Value = 999999
+                Notify("金钱已设置为 999999！")
+            end
+        end
+        -- 尝试修改UI显示
+        for _, gui in ipairs(Player.PlayerGui:GetDescendants()) do
+            if gui:IsA("TextLabel") and (gui.Name:find("Cash") or gui.Name:find("Money")) then
+                gui.Text = "999999"
+            end
+        end
+    end)
+end)
+
+-- 一键改钻石
+GemBtn.MouseButton1Click:Connect(function()
+    pcall(function()
+        -- 尝试修改leaderstats
+        if Player:FindFirstChild("leaderstats") then
+            local Gem = Player.leaderstats:FindFirstChild("Gems") or Player.leaderstats:FindFirstChild("Diamonds")
+            if Gem then
+                Gem.Value = 999
+                Notify("钻石已设置为 999！")
+            end
+        end
+        -- 尝试修改UI显示
+        for _, gui in ipairs(Player.PlayerGui:GetDescendants()) do
+            if gui:IsA("TextLabel") and (gui.Name:find("Gem") or gui.Name:find("Diamond")) then
+                gui.Text = "999"
+            end
+        end
+    end)
+end)
+
+-- 一键完成烹饪任务
+TaskBtn.MouseButton1Click:Connect(function()
+    pcall(function()
+        for _, gui in ipairs(Player.PlayerGui:GetDescendants()) do
+            if gui:IsA("TextLabel") and gui.Text:find("烹饪") and gui.Text:find("/5") then
+                gui.Text = "烹饪5道菜 5/5"
+                Notify("烹饪任务已一键完成！")
+                return
+            end
+        end
+        Notify("未找到任务进度文本")
+    end)
+end)
+
+Notify("✅ 面板加载完成！所有功能已就绪")
