@@ -17,6 +17,7 @@ button:disabled{background:#555;cursor:not-allowed;opacity:0.6;}
 .link-btn{background:#ff0000;display:inline-block;padding:8px 16px;border-radius:4px;color:#fff;text-decoration:none;margin:4px;}
 .ins-btn{background:#bc2a8d;}
 .fb-btn{background:#1877f2;}
+.wa-btn{background:#25D366;}
 .count-text{color:#ffaa00;margin:8px 0;}
 .step-done{color:#00ff00;}
 .step-undone{color:#999;}
@@ -28,9 +29,10 @@ button:disabled{background:#555;cursor:not-allowed;opacity:0.6;}
 
     <!-- 社交关注任务区域 -->
     <div class="box">
-        <h3>📱 完成关注任务解锁密钥</h3>
+        <h3>📱 完成全部任务解锁密钥</h3>
+
         <div>
-            <a class="link-btn" id="ytBtn" target="_blank" href="https://www.youtube.com/@%E9%BB%91%E5%AE%A2%E5%AE%9E%E5%90%8D%E8%AE%A4%E8%AF%81">YouTube 订阅</a>
+            <a class="link-btn" id="ytBtn" target="_blank" href="https://www.youtube.com/@helper6767">YouTube 订阅</a>
             <span id="ytStep" class="step-undone">未完成 (需等待60秒)</span>
         </div>
         <div class="count-text" id="ytCount"></div>
@@ -41,11 +43,18 @@ button:disabled{background:#555;cursor:not-allowed;opacity:0.6;}
         </div>
         <div class="count-text" id="igCount"></div>
 
-        <div>
+        <div style="margin:10px 0;">
             <a class="link-btn fb-btn" id="fbBtn" target="_blank" href="https://www.facebook.com/share/1C95LqTZ1L/">Facebook 关注</a>
             <span id="fbStep" class="step-undone">未完成 (需等待60秒)</span>
         </div>
         <div class="count-text" id="fbCount"></div>
+
+        <!-- WhatsApp 新增 -->
+        <div style="margin:10px 0;">
+            <a class="link-btn wa-btn" id="waBtn" target="_blank" href="https://wa.me/60189597579?text=感谢您的脚本验证">WhatsApp 联系</a>
+            <span id="waStep" class="step-undone">未完成 (需等待60秒)</span>
+        </div>
+        <div class="count-text" id="waCount"></div>
     </div>
 
     <!-- 1. 获取密钥区域 -->
@@ -57,7 +66,7 @@ button:disabled{background:#555;cursor:not-allowed;opacity:0.6;}
         <button id="copyBtn" onclick="copyKey()" disabled>复制密钥</button>
     </div>
 
-    <!-- 2. 密钥验证 + 执行器 -->
+    <!-- 2. 密钥验证 & 执行器 -->
     <div class="box">
         <h3>✅ 密钥验证 & 脚本执行</h3>
         <input id="userKey" placeholder="粘贴你获取到的密钥...">
@@ -76,9 +85,9 @@ button:disabled{background:#555;cursor:not-allowed;opacity:0.6;}
 let nowKey = "";
 const wordLib = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
 
-// 任务状态
-let ytDone = false, igDone = false, fbDone = false;
-let ytTimer = null, igTimer = null, fbTimer = null;
+// 四项任务状态
+let ytDone = false, igDone = false, fbDone = false, waDone = false;
+let ytTimer = null, igTimer = null, fbTimer = null, waTimer = null;
 
 // 随机密钥
 function randStr(n){
@@ -87,17 +96,17 @@ function randStr(n){
     return s;
 }
 
-// 检测全部任务是否完成
+// 检测四项全部完成才解锁密钥
 function checkAllTask(){
     let getBtn = document.getElementById("getBtn");
-    if(ytDone && igDone && fbDone){
+    if(ytDone && igDone && fbDone && waDone){
         getBtn.disabled = false;
     }else{
         getBtn.disabled = true;
     }
 }
 
-// YouTube 60秒倒计时
+// YouTube 60秒
 document.getElementById("ytBtn").addEventListener("click",function(){
     if(ytDone) return;
     let sec = 60;
@@ -119,7 +128,7 @@ document.getElementById("ytBtn").addEventListener("click",function(){
     },1000);
 });
 
-// Instagram 60秒倒计时
+// Instagram 60秒
 document.getElementById("igBtn").addEventListener("click",function(){
     if(igDone) return;
     let sec = 60;
@@ -141,7 +150,7 @@ document.getElementById("igBtn").addEventListener("click",function(){
     },1000);
 });
 
-// Facebook 60秒倒计时
+// Facebook 60秒
 document.getElementById("fbBtn").addEventListener("click",function(){
     if(fbDone) return;
     let sec = 60;
@@ -158,6 +167,28 @@ document.getElementById("fbBtn").addEventListener("click",function(){
             stepDom.className = "step-done";
             stepDom.innerText = "✅ 已完成";
             fbDone = true;
+            checkAllTask();
+        }
+    },1000);
+});
+
+// WhatsApp 60秒 + 自动带文字
+document.getElementById("waBtn").addEventListener("click",function(){
+    if(waDone) return;
+    let sec = 60;
+    let dom = document.getElementById("waCount");
+    let stepDom = document.getElementById("waStep");
+    dom.innerText = "WhatsApp 倒计时："+sec+" 秒";
+
+    waTimer = setInterval(()=>{
+        sec--;
+        dom.innerText = "WhatsApp 倒计时："+sec+" 秒";
+        if(sec <= 0){
+            clearInterval(waTimer);
+            dom.innerText = "WhatsApp 任务完成！";
+            stepDom.className = "step-done";
+            stepDom.innerText = "✅ 已完成";
+            waDone = true;
             checkAllTask();
         }
     },1000);
@@ -197,7 +228,6 @@ function copyKey(){
 window.onload = function(){
     let old = localStorage.getItem("saveKey");
     if(old) document.getElementById("userKey").value = old;
-    // 初始禁用生成密钥按钮
     document.getElementById("getBtn").disabled = true;
 }
 
@@ -217,9 +247,8 @@ function checkKey(k){
     return reg.test(k);
 }
 
-// ========== 超强真假脚本识别（已帮你完整写好） ==========
+// 超强真假脚本识别
 function checkScript(s){
-    // 必须含有罗布乐思核心关键字
     let coreKeys = [
         /loadstring\(/i,
         /getgenv\(/i,
@@ -238,7 +267,6 @@ function checkScript(s){
     }
     if(!hasCore) return false;
 
-    // 必须有完整结构，防止只打关键词混过去
     let fullStruct = [
         /httpget/i,
         /\(\s*\)/,
@@ -253,10 +281,8 @@ function checkScript(s){
             break;
         }
     }
-
     return hasFull;
 }
-// =====================================================
 
 // 主运行
 function runInject(){
