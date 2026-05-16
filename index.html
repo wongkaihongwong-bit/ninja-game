@@ -205,6 +205,79 @@
 
         // 3. 验证输入的密钥是否正确
         function verifyCode(input, logOutput, status) {
+            function verifyCode(input, logOutput, status) {
+    // ...（你的验证代码）
+}
+
+// ↓↓↓ 在这里粘贴executeScript函数 ↓↓↓
+function executeScript() {
+    const scriptInput = document.getElementById('script-input').value.trim();
+    if (!scriptInput) {
+        alert('⚠️ 请先粘贴Roblox脚本！');
+        return;
+    }
+
+    // 校验是否符合Roblox脚本常见格式
+    const robloxPatterns = [
+        /loadstring\(.+\)/i,
+        /getgenv\(\)/i,
+        /getfenv\(\)/i,
+        /getrenv\(\)/i,
+        /setreadonly\(/i,
+        /\_G\./,
+        /game:GetService\(/i
+    ];
+
+    let isRealScript = false;
+    for (const pattern of robloxPatterns) {
+        if (pattern.test(scriptInput)) {
+            isRealScript = true;
+            break;
+        }
+    }
+
+    if (!isRealScript) {
+        alert('❌ 请粘贴有效的Roblox脚本！\n（需要包含loadstring/getgenv等关键词）');
+        return;
+    }
+
+    // 校验通过，播放执行动画
+    document.getElementById('log-output').innerHTML = '';
+    let logCount = 0;
+    const maxLogs = 12;
+    const scriptLogs = [
+        "[INFO] 正在解析Roblox Lua脚本...",
+        "[INFO] 验证脚本签名与格式...",
+        "[INFO] 注入游戏内存空间...",
+        "[INFO] 绕过Roblox反注入保护...",
+        "[INFO] 加载脚本依赖模块...",
+        "[INFO] 执行脚本主函数...",
+        "[INFO] 初始化游戏功能模块...",
+        "[INFO] 注入完成，脚本运行中...",
+    ];
+
+    const interval = setInterval(() => {
+        if (logCount >= maxLogs) {
+            clearInterval(interval);
+            const successMsg = document.createElement('div');
+            successMsg.className = 'log-line success';
+            successMsg.textContent = "[+] 脚本执行成功！功能已在游戏中激活";
+            document.getElementById('log-output').appendChild(successMsg);
+            return;
+        }
+        const randomLog = scriptLogs[Math.floor(Math.random() * scriptLogs.length)];
+        const logLine = document.createElement('div');
+        logLine.className = 'log-line';
+        logLine.textContent = `[${new Date().toLocaleTimeString()}] ${randomLog}`;
+        document.getElementById('log-output').appendChild(logLine);
+        document.getElementById('log-output').scrollTop = document.getElementById('log-output').scrollHeight;
+        logCount++;
+    }, 180);
+}
+// ↑↑↑ 粘贴结束 ↑↑↑
+
+</script>
+
             // 去掉空格后对比（不区分大小写）
             const inputClean = input.replace(/\s+/g, '').toLowerCase();
             const keyClean = currentCorrectKey.replace(/\s+/g, '').toLowerCase();
