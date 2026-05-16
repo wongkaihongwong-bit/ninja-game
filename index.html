@@ -9,7 +9,7 @@
         #terminal { border: 2px solid #0f0; padding: 20px; margin: 0 auto; max-width: 350px; background: #050505; }
         input { background: #000; color: #0f0; border: 1px solid #0f0; padding: 10px; width: 85%; font-size: 16px; outline: none; text-align: center; }
         button { background: #0f0; color: #000; border: none; padding: 10px; font-weight: bold; margin-top: 15px; width: 92%; font-size: 16px; cursor: pointer; }
-        .key-link { display: block; margin: 15px 0; color: #00ffff; text-decoration: underline; font-size: 14px; cursor: pointer; }
+        .key-btn { display: block; margin: 15px auto; color: #00ffff; text-decoration: underline; font-size: 14px; cursor: pointer; background: none; border: none; }
         .success { color: #ff0055; font-size: 30px; font-weight: bold; animation: blink 0.5s infinite; }
         @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }
     </style>
@@ -17,22 +17,65 @@
 <body>
 
     <div id="terminal">
-        <p id="status">> 请输入黑客代码:</p>
-        <input type="text" id="code-input" placeholder="输入代码...">
-        <a class="key-link" href="https://netcut.cn" target="_blank">🔗 点击这里获取免费密钥 (Key)</a>
+        <p id="status">> 请输入随机黑客代码:</p>
+        <input type="text" id="code-input" placeholder="等待注入代码...">
+        
+        <!-- 点击这个按钮，网页会在后台当场为你随机制造一串代码并复制 -->
+        <button class="key-btn" onclick="generateRandomKey()">🔗 [点击此处获取并复制当前随机密钥]</button>
+        
         <button onclick="checkCode()">⚡ 运行 RUN</button>
     </div>
 
     <script>
+        // 游戏在后台自动生成的随机密码会存在这里
+        let currentCorrectKey = "";
+
+        // 【核心】不用任何网站，用代码在手机本地当场制造随机密码的函数
+        function generateRandomKey() {
+            const characters = 'abcdefghijklmnopqrstuvwxyz0123456789';
+            
+            // 模仿你之前的格式：4位+空格+5位+空格+4位
+            let part1 = '';
+            for (let i = 0; i < 4; i++) part1 += characters.charAt(Math.floor(Math.random() * characters.length));
+            
+            let part2 = '';
+            for (let i = 0; i < 5; i++) part2 += characters.charAt(Math.floor(Math.random() * characters.length));
+            
+            let part3 = '';
+            for (let i = 0; i < 4; i++) part3 += characters.charAt(Math.floor(Math.random() * characters.length));
+
+            // 拼接成最终的动态随机验证码
+            currentCorrectKey = `${part1} ${part2} ${part3}`;
+
+            // 自动帮玩家复制到手机剪贴板，并弹窗提示他
+            navigator.clipboard.writeText(currentCorrectKey).then(() => {
+                alert(`【密钥生成成功】\n当前随机代码为：${currentCorrectKey}\n已自动复制！请直接在输入框内长按粘贴。`);
+                document.getElementById('status').innerText = "> 密钥已复制，请注入系统...";
+            }).catch(() => {
+                // 如果部分手机浏览器限制了自动复制，就用弹窗让他手动看
+                alert(`当前随机代码为：${currentCorrectKey}\n请记住并输入它！`);
+            });
+        }
+
+        // 验证输入的代码是否等于刚刚新鲜生成的随机密码
         function checkCode() {
             let input = document.getElementById('code-input').value.trim().toLowerCase();
             let box = document.getElementById('terminal');
 
-            if (input === '3k72 p8l05 6f49' || input === '3k72p8l056f49') { 
+            if (currentCorrectKey === "") {
+                alert('【错误】请先点击上方链接生成当次的随机密钥！');
+                return;
+            }
+
+            // 去掉空格对比，防止玩家粘错
+            let无空格输入 = input.replace(/\s+/g, '');
+            let无空格正确答案 = currentCorrectKey.replace(/\s+/g, '');
+
+            if (无空格输入 === 无空格正确答案) { 
                 box.innerHTML = "<p class='success'>HACK SUCCESS<br>ACCESS GRANTED</p>";
                 document.body.style.backgroundColor = '#100';
             } else {
-                alert('ACCESS DENIED');
+                alert('ACCESS DENIED (代码已过期或错误)');
                 document.getElementById('code-input').value = '';
             }
         }
