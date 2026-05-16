@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ninja Executor - 官方首页</title>
+    <style>
+        *{margin:0;padding:0;box-sizing:border-box;font-family:'Segoe UI',sans-serif;}
+        body{
+            background:#0b0b13;
+            color:#fff;
+            min-height:100vh;
+            text-align:center;
+            padding-top:80px;
+        }
+        .logo{font-size:50px;font-weight:bold;color:#7b2cbf;margin-bottom:20px;}
+        .desc{color:#aaa;font-size:18px;margin-bottom:50px;}
+        .btn{
+            display:inline-block;
+            padding:16px 40px;
+            margin:12px;
+            background:#7b2cbf;
+            color:#fff;
+            text-decoration:none;
+            border-radius:8px;
+            font-weight:bold;
+            transition:0.3s;
+        }
+        .btn:hover{background:#9d4edd;transform:scale(1.05);}
+        .btn2{background:#222;border:1px solid #7b2cbf;}
+        .btn2:hover{background:#111;}
+    </style>
+</head>
+<body>
+    <div class="logo">NINJA EXECUTOR</div>
+    <div class="desc">免费 Roblox 电脑端执行器 | 需要密钥才能使用</div>
+
+    <a href="key.html" class="btn">🔑 获取密钥</a>
+    <a href="executor.html" class="btn btn2">💻 打开执行器</a>
+</body>
+</html>
+
