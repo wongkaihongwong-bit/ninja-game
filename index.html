@@ -3,80 +3,229 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>终端</title>
+    <title>终端模拟器</title>
     <style>
-        body { background-color: #000; color: #0f0; font-family: monospace; text-align: center; padding-top: 50px; }
-        #terminal { border: 2px solid #0f0; padding: 20px; margin: 0 auto; max-width: 350px; background: #050505; }
-        input { background: #000; color: #0f0; border: 1px solid #0f0; padding: 10px; width: 85%; font-size: 16px; outline: none; text-align: center; }
-        button { background: #0f0; color: #000; border: none; padding: 10px; font-weight: bold; margin-top: 15px; width: 92%; font-size: 16px; cursor: pointer; }
-        .key-btn { display: block; margin: 15px auto; color: #00ffff; text-decoration: underline; font-size: 14px; cursor: pointer; background: none; border: none; }
-        .success { color: #ff0055; font-size: 30px; font-weight: bold; animation: blink 0.5s infinite; }
-        @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            background-color: #000;
+            color: #0f0;
+            font-family: 'Courier New', monospace;
+            text-align: center;
+            padding: 20px;
+        }
+        #terminal {
+            border: 2px solid #0f0;
+            padding: 20px;
+            margin: 50px auto;
+            max-width: 450px;
+            background: #050505;
+            border-radius: 8px;
+        }
+        #status {
+            font-size: 18px;
+            margin-bottom: 20px;
+        }
+        #code-input {
+            background: #000;
+            color: #0f0;
+            border: 1px solid #0f0;
+            padding: 12px;
+            width: 100%;
+            font-size: 16px;
+            outline: none;
+            border-radius: 4px;
+        }
+        .key-btn {
+            display: block;
+            margin: 15px auto;
+            color: #00ffff;
+            text-decoration: underline;
+            cursor: pointer;
+            background: transparent;
+            border: none;
+            font-size: 16px;
+        }
+        #run-btn {
+            background: #0f0;
+            color: #000;
+            border: none;
+            padding: 12px;
+            font-weight: bold;
+            margin-top: 15px;
+            width: 100%;
+            cursor: pointer;
+            font-size: 18px;
+            border-radius: 4px;
+            transition: background 0.2s;
+        }
+        #run-btn:hover {
+            background: #0c0;
+        }
+        #log-output {
+            margin-top: 20px;
+            background: #0a0a0a;
+            padding: 15px;
+            min-height: 250px;
+            border: 1px solid #0f0;
+            border-radius: 4px;
+            text-align: left;
+            overflow-y: auto;
+            max-height: 300px;
+        }
+        .log-line {
+            color: #0f0;
+            line-height: 1.6;
+            font-size: 14px;
+            opacity: 0;
+            animation: fadeIn 0.15s forwards;
+        }
+        @keyframes fadeIn {
+            to { opacity: 1; }
+        }
+        .success {
+            color: #0f0;
+            font-size: 22px;
+            font-weight: bold;
+            animation: blink 0.5s infinite;
+        }
+        .error {
+            color: #ff0000;
+            font-size: 22px;
+            font-weight: bold;
+            animation: blink 0.5s infinite;
+        }
+        @keyframes blink {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.3; }
+        }
     </style>
 </head>
 <body>
-
     <div id="terminal">
-        <p id="status">> 请输入随机黑客代码:</p>
+        <p id="status">请输入随机黑客代码:</p>
         <input type="text" id="code-input" placeholder="等待注入代码...">
-        
-        <!-- 点击这个按钮，网页会在后台当场为你随机制造一串代码并复制 -->
+
         <button class="key-btn" onclick="generateRandomKey()">🔗 [点击此处获取并复制当前随机密钥]</button>
-        
-        <button onclick="checkCode()">⚡ 运行 RUN</button>
+
+        <button id="run-btn" onclick="startHack()">⚡ 运行 RUN</button>
+
+        <div id="log-output"></div>
     </div>
 
     <script>
-        // 游戏在后台自动生成的随机密码会存在这里
+        // 存储当前生成的正确密钥
         let currentCorrectKey = "";
+        // 预定义的“黑客日志”随机片段
+        const fakeLogs = [
+            "Initializing network scan...",
+            "Scanning port 21... open",
+            "Scanning port 22... open",
+            "Scanning port 80... open",
+            "Scanning port 443... open",
+            "Bypassing firewall rules... success",
+            "Decrypting AES-256 payload...",
+            "Injecting SQL injection payload...",
+            "Brute-forcing admin credentials...",
+            "Establishing backdoor connection...",
+            "Accessing target system...",
+            "Downloading sensitive data...",
+            "Encrypting exfiltrated files...",
+            "Covering tracks, erasing logs...",
+            "Disabling system alerts...",
+            "Elevating privileges to root...",
+            "Uploading rootkit module...",
+            "Spawning interactive shell...",
+            "Enumerating user permissions...",
+            "Exploiting CVE-2024-21234..."
+        ];
 
-        // 【核心】不用任何网站，用代码在手机本地当场制造随机密码的函数
+        // 1. 生成随机密钥并复制
         function generateRandomKey() {
-            const characters = 'abcdefghijklmnopqrstuvwxyz0123456789';
+            const chars = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*';
+            let part1 = '', part2 = '', part3 = '';
             
-            // 模仿你之前的格式：4位+空格+5位+空格+4位
-            let part1 = '';
-            for (let i = 0; i < 4; i++) part1 += characters.charAt(Math.floor(Math.random() * characters.length));
+            // 生成 4 + 5 + 4 位的密钥，带空格分隔
+            for (let i = 0; i < 4; i++) part1 += chars[Math.floor(Math.random() * chars.length)];
+            for (let i = 0; i < 5; i++) part2 += chars[Math.floor(Math.random() * chars.length)];
+            for (let i = 0; i < 4; i++) part3 += chars[Math.floor(Math.random() * chars.length)];
             
-            let part2 = '';
-            for (let i = 0; i < 5; i++) part2 += characters.charAt(Math.floor(Math.random() * characters.length));
-            
-            let part3 = '';
-            for (let i = 0; i < 4; i++) part3 += characters.charAt(Math.floor(Math.random() * characters.length));
-
-            // 拼接成最终的动态随机验证码
             currentCorrectKey = `${part1} ${part2} ${part3}`;
 
-            // 自动帮玩家复制到手机剪贴板，并弹窗提示他
+            // 自动复制到剪贴板
             navigator.clipboard.writeText(currentCorrectKey).then(() => {
-                alert(`【密钥生成成功】\n当前随机代码为：${currentCorrectKey}\n已自动复制！请直接在输入框内长按粘贴。`);
-                document.getElementById('status').innerText = "> 密钥已复制，请注入系统...";
+                alert(`【密钥生成成功】\n当前随机代码为: ${currentCorrectKey}\n已自动复制！直接粘贴到输入框即可`);
+                document.getElementById('status').innerText = "密钥已复制，请注入系统...";
             }).catch(() => {
-                // 如果部分手机浏览器限制了自动复制，就用弹窗让他手动看
-                alert(`当前随机代码为：${currentCorrectKey}\n请记住并输入它！`);
+                // 复制失败时手动提示
+                alert(`当前随机代码为: ${currentCorrectKey}\n请记住并手动输入！`);
             });
         }
 
-        // 验证输入的代码是否等于刚刚新鲜生成的随机密码
-        function checkCode() {
-            let input = document.getElementById('code-input').value.trim().toLowerCase();
-            let box = document.getElementById('terminal');
+        // 2. 点击运行后，先播放随机代码滚动效果，再验证密钥
+        function startHack() {
+            const input = document.getElementById('code-input').value.trim().toLowerCase();
+            const logOutput = document.getElementById('log-output');
+            const status = document.getElementById('status');
+            logOutput.innerHTML = ''; // 清空之前的日志
 
+            // 检查是否生成过密钥
             if (currentCorrectKey === "") {
-                alert('【错误】请先点击上方链接生成当次的随机密钥！');
+                alert('【错误】请先点击上方按钮生成随机密钥！');
                 return;
             }
 
-            // 去掉空格对比，防止玩家粘错
-            let无空格输入 = input.replace(/\s+/g, '');
-            let无空格正确答案 = currentCorrectKey.replace(/\s+/g, '');
+            // 禁用按钮防止重复点击
+            document.getElementById('run-btn').disabled = true;
+            document.getElementById('run-btn').innerText = "正在入侵...";
 
-            if (无空格输入 === 无空格正确答案) { 
-                box.innerHTML = "<p class='success'>HACK SUCCESS<br>ACCESS GRANTED</p>";
-                document.body.style.backgroundColor = '#100';
+            // 生成随机日志的动画
+            let logCount = 0;
+            const maxLogs = 25; // 日志总行数
+            const interval = setInterval(() => {
+                if (logCount >= maxLogs) {
+                    clearInterval(interval);
+                    // 日志播放完，验证密钥
+                    verifyCode(input, logOutput, status);
+                    document.getElementById('run-btn').disabled = false;
+                    document.getElementById('run-btn').innerText = "⚡ 运行 RUN";
+                    return;
+                }
+
+                // 随机添加日志行
+                const randomLog = fakeLogs[Math.floor(Math.random() * fakeLogs.length)];
+                const logLine = document.createElement('div');
+                logLine.className = 'log-line';
+                logLine.textContent = `[${new Date().toLocaleTimeString()}] ${randomLog}`;
+                logOutput.appendChild(logLine);
+                logOutput.scrollTop = logOutput.scrollHeight; // 自动滚动到底部
+                logCount++;
+            }, 120); // 每120ms生成一行日志，营造疯狂滚动效果
+        }
+
+        // 3. 验证输入的密钥是否正确
+        function verifyCode(input, logOutput, status) {
+            // 去掉空格后对比（不区分大小写）
+            const inputClean = input.replace(/\s+/g, '').toLowerCase();
+            const keyClean = currentCorrectKey.replace(/\s+/g, '').toLowerCase();
+
+            if (inputClean === keyClean) {
+                // 验证成功
+                const successMsg = document.createElement('div');
+                successMsg.className = 'log-line success';
+                successMsg.textContent = "[+] 系统入侵完成！所有权限已获取，数据已成功下载。";
+                logOutput.appendChild(successMsg);
+                status.innerHTML = '<span class="success">✅ 入侵成功！系统已被控制</span>';
             } else {
-                alert('ACCESS DENIED (代码已过期或错误)');
-                document.getElementById('code-input').value = '';
+                // 验证失败
+                const errorMsg = document.createElement('div');
+                errorMsg.className = 'log-line error';
+                errorMsg.textContent = "[-] 密钥验证失败！系统防御已激活，连接已被断开。";
+                logOutput.appendChild(errorMsg);
+                status.innerHTML = '<span class="error">❌ 入侵失败！系统已锁定</span>';
             }
         }
     </script>
