@@ -8,17 +8,45 @@
 * {margin:0;padding:0;box-sizing:border-box;font-family:sans-serif;}
 body{background:#111;color:#fff;padding:20px;}
 .container{max-width:800px;margin:0 auto;}
-h1{color:#9d4edd;margin-bottom:20px;}
+h1{color:#9d4edd;margin-bottom:20px;text-align:center;}
 .box{background:#222;padding:15px;border-radius:8px;margin:10px 0;}
 input,textarea{width:100%;padding:10px;background:#333;border:none;color:#fff;border-radius:4px;margin:8px 0;}
 button{padding:10px 20px;background:#9d4edd;border:none;color:#fff;border-radius:4px;cursor:pointer;margin:5px;}
-button:disabled{background:#555;cursor:not-allowed;}
+button:disabled{background:#555;cursor:not-allowed;opacity:0.6;}
 .log{background:#000;padding:10px;height:150px;overflow:auto;color:#0f0;}
+.link-btn{background:#ff0000;display:inline-block;padding:8px 16px;border-radius:4px;color:#fff;text-decoration:none;margin:4px;}
+.ins-btn{background:#bc2a8d;}
+.fb-btn{background:#1877f2;}
+.count-text{color:#ffaa00;margin:8px 0;}
+.step-done{color:#00ff00;}
+.step-undone{color:#999;}
 </style>
 </head>
 <body>
 <div class="container">
     <h1>NINJA EXECUTOR 🔐</h1>
+
+    <!-- 社交关注任务区域 -->
+    <div class="box">
+        <h3>📱 完成关注任务解锁密钥</h3>
+        <div>
+            <a class="link-btn" id="ytBtn" target="_blank" href="https://www.youtube.com/@%E9%BB%91%E5%AE%A2%E5%AE%9E%E5%90%8D%E8%AE%A4%E8%AF%81">YouTube 订阅</a>
+            <span id="ytStep" class="step-undone">未完成 (需等待60秒)</span>
+        </div>
+        <div class="count-text" id="ytCount"></div>
+
+        <div style="margin:10px 0;">
+            <a class="link-btn ins-btn" id="igBtn" target="_blank" href="https://www.instagram.com/xx9952026?igsh=MmVobHkxdzlwb293">Instagram 关注</a>
+            <span id="igStep" class="step-undone">未完成 (需等待60秒)</span>
+        </div>
+        <div class="count-text" id="igCount"></div>
+
+        <div>
+            <a class="link-btn fb-btn" id="fbBtn" target="_blank" href="https://www.facebook.com/share/1C95LqTZ1L/">Facebook 关注</a>
+            <span id="fbStep" class="step-undone">未完成 (需等待60秒)</span>
+        </div>
+        <div class="count-text" id="fbCount"></div>
+    </div>
 
     <!-- 1. 获取密钥区域 -->
     <div class="box">
@@ -48,12 +76,92 @@ button:disabled{background:#555;cursor:not-allowed;}
 let nowKey = "";
 const wordLib = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
 
+// 任务状态
+let ytDone = false, igDone = false, fbDone = false;
+let ytTimer = null, igTimer = null, fbTimer = null;
+
 // 随机密钥
 function randStr(n){
     let s = "";
     for(let i=0;i<n;i++) s += wordLib[Math.floor(Math.random()*wordLib.length)];
     return s;
 }
+
+// 检测全部任务是否完成
+function checkAllTask(){
+    let getBtn = document.getElementById("getBtn");
+    if(ytDone && igDone && fbDone){
+        getBtn.disabled = false;
+    }else{
+        getBtn.disabled = true;
+    }
+}
+
+// YouTube 60秒倒计时
+document.getElementById("ytBtn").addEventListener("click",function(){
+    if(ytDone) return;
+    let sec = 60;
+    let dom = document.getElementById("ytCount");
+    let stepDom = document.getElementById("ytStep");
+    dom.innerText = "YouTube 倒计时："+sec+" 秒";
+
+    ytTimer = setInterval(()=>{
+        sec--;
+        dom.innerText = "YouTube 倒计时："+sec+" 秒";
+        if(sec <= 0){
+            clearInterval(ytTimer);
+            dom.innerText = "YouTube 任务完成！";
+            stepDom.className = "step-done";
+            stepDom.innerText = "✅ 已完成";
+            ytDone = true;
+            checkAllTask();
+        }
+    },1000);
+});
+
+// Instagram 60秒倒计时
+document.getElementById("igBtn").addEventListener("click",function(){
+    if(igDone) return;
+    let sec = 60;
+    let dom = document.getElementById("igCount");
+    let stepDom = document.getElementById("igStep");
+    dom.innerText = "Instagram 倒计时："+sec+" 秒";
+
+    igTimer = setInterval(()=>{
+        sec--;
+        dom.innerText = "Instagram 倒计时："+sec+" 秒";
+        if(sec <= 0){
+            clearInterval(igTimer);
+            dom.innerText = "Instagram 任务完成！";
+            stepDom.className = "step-done";
+            stepDom.innerText = "✅ 已完成";
+            igDone = true;
+            checkAllTask();
+        }
+    },1000);
+});
+
+// Facebook 60秒倒计时
+document.getElementById("fbBtn").addEventListener("click",function(){
+    if(fbDone) return;
+    let sec = 60;
+    let dom = document.getElementById("fbCount");
+    let stepDom = document.getElementById("fbStep");
+    dom.innerText = "Facebook 倒计时："+sec+" 秒";
+
+    fbTimer = setInterval(()=>{
+        sec--;
+        dom.innerText = "Facebook 倒计时："+sec+" 秒";
+        if(sec <= 0){
+            clearInterval(fbTimer);
+            dom.innerText = "Facebook 任务完成！";
+            stepDom.className = "step-done";
+            stepDom.innerText = "✅ 已完成";
+            fbDone = true;
+            checkAllTask();
+        }
+    },1000);
+});
 
 // 生成密钥倒计时
 function makeKey(){
@@ -89,6 +197,8 @@ function copyKey(){
 window.onload = function(){
     let old = localStorage.getItem("saveKey");
     if(old) document.getElementById("userKey").value = old;
+    // 初始禁用生成密钥按钮
+    document.getElementById("getBtn").disabled = true;
 }
 
 // 日志
