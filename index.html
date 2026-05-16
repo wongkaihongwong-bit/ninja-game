@@ -33,7 +33,7 @@ button:disabled{background:#555;cursor:not-allowed;}
     <div class="box">
         <h3>✅ 密钥验证 & 脚本执行</h3>
         <input id="userKey" placeholder="粘贴你获取到的密钥...">
-        <textarea id="scriptInput" placeholder="只能粘贴真实Roblox脚本：loadstring / getgenv 这类才允许执行"></textarea>
+        <textarea id="scriptInput" placeholder="只能粘贴真实Roblox完整脚本，乱写无法通过识别！"></textarea>
         <button onclick="runInject()">开始执行</button>
         <button onclick="clearLog()">清空日志</button>
     </div>
@@ -107,12 +107,46 @@ function checkKey(k){
     return reg.test(k);
 }
 
-// 判断是不是真Roblox脚本
+// ========== 超强真假脚本识别（已帮你完整写好） ==========
 function checkScript(s){
-    let ok = [/loadstring/i,/getgenv/i,/game:GetService/i,/_G\./i];
-    for(let x of ok) if(x.test(s)) return true;
-    return false;
+    // 必须含有罗布乐思核心关键字
+    let coreKeys = [
+        /loadstring\(/i,
+        /getgenv\(/i,
+        /game:GetService\(/i,
+        /_G\./i,
+        /game\.Players/i,
+        /game\.Workspace/i
+    ];
+
+    let hasCore = false;
+    for(let r of coreKeys){
+        if(r.test(s)){
+            hasCore = true;
+            break;
+        }
+    }
+    if(!hasCore) return false;
+
+    // 必须有完整结构，防止只打关键词混过去
+    let fullStruct = [
+        /httpget/i,
+        /\(\s*\)/,
+        /\.\w+\./,
+        /"\w+"/
+    ];
+
+    let hasFull = false;
+    for(let r of fullStruct){
+        if(r.test(s)){
+            hasFull = true;
+            break;
+        }
+    }
+
+    return hasFull;
 }
+// =====================================================
 
 // 主运行
 function runInject(){
@@ -134,8 +168,8 @@ function runInject(){
         return;
     }
     if(!checkScript(s)){
-        alert("不是真实Roblox脚本，禁止运行！");
-        addLog("[错误] 非法脚本拦截");
+        alert("❌ 识别失败：不是真实完整Roblox脚本！");
+        addLog("[错误] 假脚本/不完整脚本已拦截");
         return;
     }
 
